@@ -1,9 +1,8 @@
 # Ansible Role: contojo.netbox
 
-Ansible role for setting up [Netbox](https://docs.netbox.dev/en/stable/).
 Ansible role that deploys and configures [Netbox](https://docs.netbox.dev/en/stable/), an IP address management (IPAM) and data center infrastructure management (DCIM) tool.
 
-This role will deploy NetBox within its own Python virtualenv using uWSGI as the application server running under systemd.
+**Note:** This role will deploy NetBox within its own Python virtualenv using uWSGI as the application server running under systemd which is a little different to the official install docs.
 
 
 ## Supported Platforms
