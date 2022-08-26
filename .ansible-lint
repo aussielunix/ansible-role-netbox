@@ -1,0 +1,5 @@
+---
+# https://ansible-lint.readthedocs.io/en/latest/configuring/
+
+exclude_paths:
+  - .gitlab-ci.yml

@@ -1,0 +1,25 @@
+---
+
+galaxy_info:
+  role_name: netbox
+
+  description: Ansible role for setting up netbox.
+  author: aussielunix
+  namespace: aussielunix
+  company: 'Contojo Pty Ltd'
+
+  issue_tracker_url: https://gitlab.com/aussielunix/ansible/ansible-role-netbox/?/issues
+
+  license: MIT
+
+  min_ansible_version: "2.11"
+
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+
+  galaxy_tags: []
+
+dependencies: []

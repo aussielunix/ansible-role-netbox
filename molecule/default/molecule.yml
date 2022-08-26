@@ -1,0 +1,40 @@
+---
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  ansible-lint
+platforms:
+  - name: debian-netbox
+    image: "registry.gitlab.com/aussielunix/ansible/molecule-containers/${MOLECULE_DISTRO:-debian:bullseye}"
+    privileged: true
+    pre_build_image: true
+    override_command: false
+    tmpfs:
+      - /run
+      - /tmp
+provisioner:
+  name: ansible
+  log: ${MOLECULE_ANSIBLE_LOG:-true}
+  env:
+    ANSIBLE_VERBOSITY: ${MOLECULE_ANSIBLE_VERBOSITY:-0}
+scenario:
+  name: default
+  destroy_sequence:
+    - cleanup
+    - destroy
+  test_sequence:
+    - dependency
+    - lint
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+verifier:
+  name: ansible

@@ -1,0 +1,15 @@
+---
+
+- name: include set_vars.yml
+  ansible.builtin.import_tasks: set_vars.yml
+
+- name: include assert.yml
+  ansible.builtin.import_tasks: assert.yml
+  run_once: true
+  delegate_to: localhost
+
+- name: "Install packages for contojo.netbox"
+  become: true
+  ansible.builtin.package:
+    name: "{{ netbox_packages }}"
+    state: present

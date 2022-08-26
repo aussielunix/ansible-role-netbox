@@ -1,0 +1,16 @@
+---
+# prepare test host with things not included in the role you are testing
+
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Prepare test host task
+      ansible.builtin.debug:
+        msg: "This is the task for preparing the test host before testing the role"
+
+# - name: Prepare
+#   hosts: all
+#   roles:
+#     - { role: geerlingguy.postgresql }
+#     - { role: geerlingguy.redis }
+#     - { role: geerlingguy.nginx }
