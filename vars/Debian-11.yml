@@ -1,0 +1,23 @@
+---
+# file: vars/Debian-11.yml
+
+netbox_packages:
+  - graphviz
+  - libxml2-dev
+  - libxslt1-dev
+  - libffi-dev
+  - libjpeg-dev
+  - libpq-dev
+  - libssl-dev
+  - acl
+  - build-essential
+
+netbox_python_packages:
+  - python3.9
+  - python3.9-dev
+  - python3-venv
+  - python3-pip
+
+netbox_ldap_packages:
+  - libldap2-dev
+  - libsasl2-dev

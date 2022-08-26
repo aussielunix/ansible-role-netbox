@@ -1,0 +1,26 @@
+{{ ansible_managed | comment }}
+
+[uwsgi]
+master=true
+protocol={{ netbox_protocol }}
+uid=netbox
+gid=netbox
+processes=1
+threads=1
+module=netbox.wsgi
+virtualenv=/srv/netbox/current/venv-py3
+chdir=/srv/netbox/current/netbox
+static-map=/static=/srv/netbox/current/netbox/static
+logger=file:/srv/netbox/shared/application.log
+req-logger=file:/srv/netbox/shared/requests.log
+
+stats=0.0.0.0:9191
+http-keepalive=true
+http-auto-chunked=true
+add-header=Connection: Close
+memory-report=True
+vacuum=True
+log-x-forwarded-for=True
+
+# vim: ft=dosini
+

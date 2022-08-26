@@ -1,1 +1,44 @@
 ---
+
+# defaults file for netbox
+
+netbox_stable_version: 3.2.7
+netbox_stable_uri: "https://github.com/netbox-community/netbox/archive/v{{ netbox_stable_version }}.tar.gz"
+netbox_greenfields_install: false
+
+netbox_socket: "127.0.0.1:8000"
+netbox_protocol: http
+
+netbox_configuration: |
+  ALLOWED_HOSTS = ['*']
+  DATABASE = {
+      'NAME': 'netbox',         # Database name
+      'USER': 'netbox',               # PostgreSQL username
+      'PASSWORD': 'netbox',           # PostgreSQL password
+      'HOST': 'localhost',      # Database server
+      'PORT': '',               # Database port (leave blank for default)
+      'CONN_MAX_AGE': 300,      # Max database connection age
+  }
+
+  REDIS = {
+      'tasks': {
+          'HOST': 'localhost',
+          'PORT': 6379,
+          'PASSWORD': '',
+          'DATABASE': 0,
+          'SSL': False,
+          # 'INSECURE_SKIP_TLS_VERIFY': False,
+      },
+      'caching': {
+          'HOST': 'localhost',
+          'PORT': 6379,
+          'PASSWORD': '',
+          'DATABASE': 1,
+          'SSL': False,
+          # 'INSECURE_SKIP_TLS_VERIFY': False,
+      }
+  }
+
+  SECRET_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  LOGIN_REQUIRED = True
+  METRICS_ENABLED = True

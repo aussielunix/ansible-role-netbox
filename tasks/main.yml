@@ -8,8 +8,205 @@
   run_once: true
   delegate_to: localhost
 
-- name: "Install packages for contojo.netbox"
+- name: "Install packages for contojo.netbox with OS package manager"
   become: true
   ansible.builtin.package:
-    name: "{{ netbox_packages }}"
+    name: "{{ _netbox_packages | flatten }}"
     state: present
+  vars:
+    _netbox_packages:
+      - "{{ netbox_python_packages }}"
+      - "{{ netbox_packages }}"
+      - "{{ netbox_ldap_packages }}"
+
+- name: Create NetBox user group
+  ansible.builtin.group:
+    name: "netbox"
+
+- name: Create NetBox user and home directory
+  ansible.builtin.user:
+    name: "netbox"
+    group: "netbox"
+    home: "/srv/netbox"
+
+- name: Create NetBox application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: "netbox"
+    group: "netbox"
+  loop:
+    - "/srv/netbox"
+    - "/srv/netbox/releases"
+    - "/srv/netbox/shared"
+
+- name: Download and extract stable NetBox release
+  ansible.builtin.unarchive:
+    src: "{{ netbox_stable_uri }}"
+    dest: "/srv/netbox/releases"
+    creates: "/srv/netbox/releases/netbox-{{ netbox_stable_version }}"
+    owner: "netbox"
+    group: "netbox"
+    remote_src: true
+
+- name: Symlink stable release to current NetBox directory
+  ansible.builtin.file:
+    src: "/srv/netbox/releases/netbox-{{ netbox_stable_version }}"
+    dest: "/srv/netbox/current"
+    owner: "netbox"
+    group: "netbox"
+    state: link
+
+- name: Create Python virtualenv
+  ansible.builtin.pip:
+    name:
+      - pip
+      - setuptools
+    state: present
+    virtualenv: "/srv/netbox/current/venv-py3"
+    virtualenv_command: "/usr/bin/python3 -m venv"
+  become: true
+  become_user: "netbox"
+  retries: 2
+  register: _netbox_virtualenv_setup
+  until: _netbox_virtualenv_setup is succeeded
+
+- name: Install needed Python dependencies
+  ansible.builtin.pip:
+    requirements: "/srv/netbox/current/requirements.txt"
+    virtualenv: "/srv/netbox/current/venv-py3"
+  become: true
+  become_user: "netbox"
+  retries: 2
+  register: _netbox_virtualenv_setup
+  until: _netbox_virtualenv_setup is succeeded
+
+- name: Drop in a Netbox configuration file
+  ansible.builtin.copy:
+    content: "{{ netbox_configuration }}"
+    dest: /srv/netbox/shared/configuration.py
+    owner: netbox
+    group: netbox
+    mode: 0640
+    validate: "/srv/netbox/current/venv-py3/bin/python -c \"import py_compile,os; f=r'%s';\
+              c='/tmp/' + os.path.basename(os.path.dirname(f)) + '-' + os.path.basename(f) + 'c';\
+              py_compile.compile(f, c); os.remove(c)\""
+
+- name: Symlink NetBox configuration file into the active NetBox release
+  ansible.builtin.file:
+    src: "/srv/netbox/shared/configuration.py"
+    dest: "/srv/netbox/current/netbox/netbox/configuration.py"
+    owner: "netbox"
+    group: "netbox"
+    state: link
+
+- name: Generate static assets for NetBox
+  community.general.django_manage:
+    command: collectstatic
+    app_path: "/srv/netbox/current/netbox"
+    virtualenv: "/srv/netbox/current/venv-py3"
+
+- name: Install uWSGI via pip
+  ansible.builtin.pip:
+    name: uwsgi
+    state: present
+    umask: "0022"
+  retries: 2
+  register: _netbox_uwsgi_install
+  until: _netbox_uwsgi_install is succeeded
+
+- name: Drop in a placeholder uwsgi configuration file
+  ansible.builtin.template:
+    src: uwsgi.ini.j2
+    dest: /srv/netbox/shared/uwsgi.ini
+    owner: netbox
+    group: netbox
+    mode: 0640
+
+- name: Install NetBox socket unit file
+  ansible.builtin.template:
+    src: netbox.socket.j2
+    dest: /lib/systemd/system/netbox.socket
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install NetBox service unit file
+  ansible.builtin.template:
+    src: netbox.service.j2
+    dest: /lib/systemd/system/netbox.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install NetBox-rqworker service unit file
+  ansible.builtin.template:
+    src: netbox-rqworker.service.j2
+    dest: /lib/systemd/system/netbox-rqworker.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Set NetBox socket and service to stopped and disabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - netbox.socket
+    - netbox.service
+
+- name: Set netbox-rqworker.service to stopped and disabled
+  ansible.builtin.systemd:
+    name: netbox-rqworker.service
+    state: stopped
+    enabled: false
+
+- name: Setup and Start Netbox
+  block:
+    - name: Start and enable netbox and netbox-rqworker
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - netbox.socket
+        - netbox.service
+        - netbox-rqworker.service
+
+    - name: Run database migrations for NetBox
+      community.general.django_manage:
+        command: migrate
+        app_path: "/srv/netbox/current/netbox"
+        virtualenv: "/srv/netbox/current/venv-py3"
+      retries: 2
+      register: _netbox_db_migration
+      until: _netbox_db_migration is success
+
+    - name: Trace missing cable paths for NetBox
+      community.general.django_manage:
+        command: "trace_paths --no-input"
+        app_path: "/srv/netbox/current/netbox"
+        virtualenv: "/srv/netbox/current/venv-py3"
+
+    - name: Create a super user for NetBox
+      ansible.builtin.shell: "printf '{{ netbox_superuser_script }}' |\
+              /srv/netbox/current/venv-py3/bin/python3 /srv/netbox/current/netbox/manage.py shell"
+      register: _netbox_superuser_result
+      changed_when: "'changed' in _netbox_superuser_result.stdout"
+
+    - name: Clear expired user sessions in NetBox
+      community.general.django_manage:
+        command: clearsessions
+        app_path: "/srv/netbox/current/netbox"
+        virtualenv: "/srv/netbox/current/venv-py3"
+
+    - name: Clear stale content types in NetBox
+      community.general.django_manage:
+        command: "remove_stale_contenttypes --no-input"
+        app_path: "/srv/netbox/current/netbox"
+        virtualenv: "/srv/netbox/current/venv-py3"
+  when:
+    - netbox_greenfields_install is defined
+    - netbox_greenfields_install | bool

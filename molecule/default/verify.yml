@@ -6,19 +6,13 @@
 - name: Verify
   hosts: all
   tasks:
-    - name: Verify something
-      ansible.builtin.debug:
-        msg: "This is the verify step you wish you had"
-
-# example of validating the desired outcome
-#
-#    - name: Test if https is accepting requests
-#      ansible.builtin.uri:
-#        url: https://localhost/
-#        status_code: 200
-#        validate_certs: false
-#      register: this
-#    - name: validate we get redirected to a login page
-#      assert:
-#        that:
-#          - "'https://localhost/login/?next=/' is in this.url"
+    - name: Test if https is accepting requests
+      ansible.builtin.uri:
+        url: https://localhost/
+        status_code: 200
+        validate_certs: false
+      register: this
+    - name: validate we get redirected to a login page
+      assert:
+        that:
+          - "'https://localhost/login/?next=/' is in this.url"

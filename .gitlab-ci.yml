@@ -3,7 +3,7 @@
 .matrix:
   parallel:
     matrix:
-      - PLATFORM: ['debian:buster', 'debian:bullseye', 'ubuntu:focal', 'ubuntu:jammy']
+      - PLATFORM: ['debian:bullseye']
 
 default:
   image: docker:stable-dind

@@ -1,4 +1,1 @@
 ---
-# file: vars/Debian.yml
-
-netbox_packages: []

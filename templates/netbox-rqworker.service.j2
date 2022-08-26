@@ -1,0 +1,32 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=NetBox RQ-Worker
+Documentation=https://docs.netbox.dev/en/stable/
+After=syslog.target
+
+[Service]
+WorkingDirectory=/srv/netbox/shared
+ExecStart=/srv/netbox/current/venv-py3/bin/python3 /srv/netbox/current/netbox/manage.py rqworker
+ExecReload=/bin/kill -1 $MAINPID
+ExecStop=/bin/kill -2 $MAINPID
+StandardOutput=journal
+StandardError=journal
+User=netbox
+Group=netbox
+Restart=on-failure
+#SuccessExitStatus=15 17 29 30
+KillSignal=SIGQUIT
+StandardError=syslog
+NotifyAccess=all
+PrivateTmp=yes
+ProtectSystem=full
+DeviceAllow=/dev/null rw
+DeviceAllow=/dev/urandom r
+DeviceAllow=/dev/zero r
+ProtectHome=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
+

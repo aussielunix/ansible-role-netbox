@@ -18,7 +18,9 @@ platforms:
       - /tmp
 provisioner:
   name: ansible
-  log: ${MOLECULE_ANSIBLE_LOG:-true}
+  ansible_args:
+    - -vvv
+  log: ${MOLECULE_ANSIBLE_LOG:-True}
   env:
     ANSIBLE_VERBOSITY: ${MOLECULE_ANSIBLE_VERBOSITY:-0}
 scenario:

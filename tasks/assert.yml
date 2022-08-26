@@ -2,19 +2,14 @@
 
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/assert_module.html
 
-- name: "Assert not to run on anything other than Python 3"
+- name: Assert not to run on anything other than Python 3
   ansible.builtin.assert:
     that:
       - ansible_python.version.major == 3
     quiet: true
 
-# - name: "Test if contojo.netbox_X is set correctly"
-#   ansible.builtin.assert:
-#     that:
-#       - netbox_X is defined
-#       - netbox_X is iterable
-#       - netbox_X is number
-#       - netbox_X is boolean
-#       - netbox_X = 0
-#       - netbox_X in [ "a", "b" ]
-#     quiet: true
+- name: Test if netbox_stable_version is set
+  ansible.builtin.assert:
+    that:
+      - netbox_stable_version is defined
+    quiet: false
