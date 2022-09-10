@@ -11,7 +11,7 @@ Ansible role that deploys and configures [Netbox](https://docs.netbox.dev/en/sta
 |-----------|---------------|--------|----------------------|---------|
 | Debian    | Debian        | :x: | 10 | |
 | Debian    | Debian        | :heavy_check_mark: | 11 | |
-| Debian    | Ubuntu        | :x: | 22.04 | |
+| Debian    | Ubuntu        | :heavy_check_mark: | 22.04 | |
 
 ## Requirements
 
