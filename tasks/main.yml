@@ -82,6 +82,16 @@
   register: _netbox_virtualenv_setup
   until: _netbox_virtualenv_setup is succeeded
 
+- name: Install extra Python packages
+  ansible.builtin.pip:
+    name: "{{ item }}"
+    state: latest  # noqa package-latest
+    virtualenv: "/srv/netbox/current/venv-py3"
+  become: true
+  become_user: "netbox"
+  loop: "{{ netbox_extra_python_packages }}"
+  when: netbox_extra_python_packages
+
 - name: Drop in a Netbox configuration file
   ansible.builtin.copy:
     content: "{{ netbox_configuration }}"

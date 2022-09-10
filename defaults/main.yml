@@ -42,3 +42,6 @@ netbox_configuration: |
   SECRET_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
   LOGIN_REQUIRED = True
   METRICS_ENABLED = True
+
+netbox_extra_python_packages:
+  - tzdata
